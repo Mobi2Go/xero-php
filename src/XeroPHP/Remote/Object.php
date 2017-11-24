@@ -85,6 +85,16 @@ abstract class Object implements ObjectInterface, \JsonSerializable, \ArrayAcces
     }
 
     /**
+     * Get the application.
+     *
+     * @return \XeroPHP\Application
+     */
+    protected function getApplication()
+    {
+        return $this->_application;
+    }
+
+    /**
      * If there have been any properties changed since load
      *
      * @param null $property
@@ -338,7 +348,8 @@ abstract class Object implements ObjectInterface, \JsonSerializable, \ArrayAcces
         foreach (static::getProperties() as $property => $meta) {
             $mandatory = $meta[self::KEY_MANDATORY];
 
-            if ($mandatory) {
+            //If it's got a GUID, it's already going to be valid almost all cases
+            if (!$this->hasGUID() && $mandatory) {
                 if (!isset($this->_data[$property]) || empty($this->_data[$property])) {
                     throw new Exception(
                         sprintf(
