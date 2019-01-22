@@ -4,9 +4,12 @@ namespace XeroPHP\Models\Accounting;
 use XeroPHP\Remote;
 use XeroPHP\Models\Accounting\Item\Purchase;
 use XeroPHP\Models\Accounting\Item\Sale;
+use XeroPHP\Traits\HistoryTrait;
 
-class Item extends Remote\Object
+class Item extends Remote\Model
 {
+
+    use HistoryTrait;
 
     /**
      * Xero identifier
@@ -21,7 +24,7 @@ class Item extends Remote\Object
      */
 
     /**
-     * The inventory asset account for the item. The account must be of type INVENTORY. The 
+     * The inventory asset account for the item. The account must be of type INVENTORY. The
      * COGSAccountCode in PurchaseDetails is also required to create a tracked item
      *
      * @property string InventoryAssetAccountCode
@@ -357,13 +360,19 @@ class Item extends Remote\Object
     /**
      * @param Purchase $value
      * @return Item
+     * @deprecated
      */
     public function addPurchaseDetail(Purchase $value)
     {
+    }
+
+    /**
+     * @param Purchase $value
+     * @return Item
+     */
+    public function setPurchaseDetails(Purchase $value)
+    {
         $this->propertyUpdated('PurchaseDetails', $value);
-        if (!isset($this->_data['PurchaseDetails'])) {
-            $this->_data['PurchaseDetails'] = new Remote\Collection();
-        }
         $this->_data['PurchaseDetails'] = $value;
         return $this;
     }
@@ -380,13 +389,19 @@ class Item extends Remote\Object
     /**
      * @param Sale $value
      * @return Item
+     * @deprecated
      */
     public function addSalesDetail(Sale $value)
     {
+    }
+
+    /**
+     * @param Sale $value
+     * @return Item
+     */
+    public function setSalesDetails(Sale $value)
+    {
         $this->propertyUpdated('SalesDetails', $value);
-        if (!isset($this->_data['SalesDetails'])) {
-            $this->_data['SalesDetails'] = new Remote\Collection();
-        }
         $this->_data['SalesDetails'] = $value;
         return $this;
     }

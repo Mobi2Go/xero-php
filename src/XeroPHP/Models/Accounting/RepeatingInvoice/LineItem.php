@@ -4,7 +4,7 @@ namespace XeroPHP\Models\Accounting\RepeatingInvoice;
 use XeroPHP\Remote;
 use XeroPHP\Models\Accounting\TrackingCategory;
 
-class LineItem extends Remote\Object
+class LineItem extends Remote\Model
 {
 
     /**
@@ -144,6 +144,7 @@ class LineItem extends Remote\Object
     public static function getProperties()
     {
         return [
+            'LineItemID' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
             'Description' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
             'Quantity' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
             'UnitAmount' => [false, self::PROPERTY_TYPE_FLOAT, null, false, false],

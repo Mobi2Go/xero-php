@@ -29,7 +29,7 @@ class Response
     const STATUS_ORGANISATION_OFFLINE = 503;
 
     private $request;
-
+    private $headers;
     private $status;
     private $content_type;
     private $response_body;
@@ -43,11 +43,12 @@ class Response
 
     private $root_error;
 
-    public function __construct(Request $request, $response_body, array $curl_info)
+    public function __construct(Request $request, $response_body, array $curl_info, $headers)
     {
         $this->request = $request;
         $this->response_body = $response_body;
         $this->status = $curl_info['http_code'];
+        $this->headers = $headers;
 
         list($this->content_type) = explode(';', $curl_info['content_type']);
     }
@@ -70,7 +71,7 @@ class Response
         switch ($this->status) {
             case Response::STATUS_BAD_REQUEST:
                 //This catches actual app errors
-                if (isset($this->root_error)) {
+                if (isset($this->root_error) && !empty($this->root_error)) {
                     $message = sprintf('%s (%s)', $this->root_error['message'], implode(', ', $this->element_errors));
                     $message .= $this->parseBadRequest();
                     throw new BadRequestException($message, $this->root_error['code']);
@@ -104,7 +105,10 @@ class Response
                 if (false !== stripos($response, 'Organisation is offline')) {
                     throw new OrganisationOfflineException();
                 } elseif (false !== stripos($response, 'Rate limit exceeded')) {
-                    throw new RateLimitExceededException();
+                    $problem = isset($this->headers['x-rate-limit-problem']) ? current($this->headers['x-rate-limit-problem']) : null;
+                    $exception = new RateLimitExceededException();
+                    $exception->setRateLimitProblem($problem);
+                    throw $exception;
                 } else {
                     throw new NotAvailableException();
                 }
@@ -116,7 +120,7 @@ class Response
      */
     private function parseBadRequest()
     {
-        if (isset($this->elements)) {
+        if (!empty($this->elements)) {
             $field_errors = [];
             foreach ($this->elements as $n => $element) {
                 if (isset($element['ValidationErrors'])) {
@@ -125,7 +129,17 @@ class Response
             }
             return "\nValidation errors:\n".implode("\n", $field_errors);
         }
+
+        if (isset($this->oauth_response['oauth_problem_advice'])) {
+            throw new UnauthorizedException($this->oauth_response['oauth_problem_advice']);
+        }
+
         return '';
+    }
+
+    public function getStatus()
+    {
+        return $this->status;
     }
 
     public function getResponseBody()

@@ -57,12 +57,12 @@ abstract class Application
     protected static $_type_config_defaults = [];
 
     /**
-     * @param array $user_config
+     * @param array $config
      */
-    public function __construct(array $user_config)
+    public function __construct(array $config)
     {
         //better here for overriding
-        $this->setConfig($user_config);
+        $this->setConfig($config);
 
         $this->oauth_client = new Client($this->config['oauth']);
     }
@@ -180,14 +180,14 @@ abstract class Application
      *
      * @param $model
      * @param $guid
-     * @return Remote\Object|null
+     * @return Remote\Model|null
      * @throws Exception
      * @throws Remote\Exception\NotFoundException
      */
     public function loadByGUID($model, $guid)
     {
         /**
-         * @var Remote\Object $class
+         * @var Remote\Model $class
          */
         $class = $this->validateModelClass($model);
 
@@ -201,7 +201,7 @@ abstract class Application
         //Return the first (if any) element from the response.
         foreach ($request->getResponse()->getElements() as $element) {
             /**
-             * @var Remote\Object $object
+             * @var Remote\Model $object
              */
             $object = new $class($this);
             $object->fromStringArray($element);
@@ -222,7 +222,7 @@ abstract class Application
     public function loadByGUIDs($model, $guids)
     {
         /**
-         * @var Remote\Object $class
+         * @var Remote\Model $class
          */
         $class = $this->validateModelClass($model);
 
@@ -233,11 +233,10 @@ abstract class Application
         $request = new Request($this, $url, Request::METHOD_GET);
         $request->setParameter("IDs", $guids);
         $request->send();
-//        var_dump($request->getResponse());
         $elements = new Collection();
         foreach ($request->getResponse()->getElements() as $element) {
             /**
-             * @var Remote\Object $object
+             * @var Remote\Model $object
              */
             $object = new $class($this);
             $object->fromStringArray($element);
@@ -259,12 +258,12 @@ abstract class Application
     }
 
     /**
-     * @param Remote\Object $object
+     * @param Remote\Model $object
      * @param bool $replace_data
      * @return Remote\Response|null
      * @throws Exception
      */
-    public function save(Remote\Object $object, $replace_data = false)
+    public function save(Remote\Model $object, $replace_data = false)
     {
         //Saves any properties that don't want to be included in the normal loop
         //(special saving endpoints)
@@ -291,7 +290,7 @@ abstract class Application
         }
 
         //Put in an array with the first level containing only the 'root node'.
-        $data = [$object::getRootNodeName() => $object->toStringArray()];
+        $data = [$object::getRootNodeName() => $object->toStringArray(true)];
         $url = new URL($this, $uri, $object::getAPIStem());
         $request = new Request($this, $url, $method);
 
@@ -319,7 +318,7 @@ abstract class Application
         //Just get one type to compare with, doesn't matter which.
         $current_object = $objects[0];
         /**
-         * @var Object $type
+         * @var Remote\Model $type
          */
         $type = get_class($current_object);
         $has_guid = $checkGuid ? $current_object->hasGUID() : true;
@@ -335,7 +334,7 @@ abstract class Application
                 $has_guid = true;
             }
 
-            $object_arrays[] = $object->toStringArray();
+            $object_arrays[] = $object->toStringArray(true);
         }
 
         $request_method = $has_guid ? Request::METHOD_POST : Request::METHOD_PUT;
@@ -369,25 +368,25 @@ abstract class Application
      * This is called automatically from the save method for things like
      * adding contacts to ContactGroups
      *
-     * @param Remote\Object $object
+     * @param Remote\Model $object
      * @throws Exception
      */
-    private function savePropertiesDirectly(Remote\Object $object)
+    private function savePropertiesDirectly(Remote\Model $object)
     {
         foreach ($object::getProperties() as $property_name => $meta) {
-            if ($meta[Remote\Object::KEY_SAVE_DIRECTLY] && $object->isDirty($property_name)) {
+            if ($meta[Remote\Model::KEY_SAVE_DIRECTLY] && $object->isDirty($property_name)) {
                 //Then actually save
                 $property_objects = $object->$property_name;
-                /** @var Object $property_type */
+                /** @var Remote\Model $property_type */
                 $property_type = get_class(current($property_objects));
 
                 $url = new URL($this, sprintf('%s/%s/%s', $object::getResourceURI(), $object->getGUID(), $property_type::getResourceURI()));
                 $request = new Request($this, $url, Request::METHOD_PUT);
 
                 $property_array = [];
-                /** @var Object[] $property_objects */
+                /** @var Remote\Model[] $property_objects */
                 foreach ($property_objects as $property_object) {
-                    $property_array[] = $property_object->toStringArray();
+                    $property_array[] = $property_object->toStringArray(false);
                 }
 
                 $root_node_name = Helpers::pluralize($property_type::getRootNodeName());
@@ -410,11 +409,11 @@ abstract class Application
     }
 
     /**
-     * @param Remote\Object $object
+     * @param Remote\Model $object
      * @return Remote\Response
      * @throws Exception
      */
-    public function delete(Remote\Object $object)
+    public function delete(Remote\Model $object)
     {
         if (!$object::supportsMethod(Request::METHOD_DELETE)) {
             throw new Exception(
@@ -428,8 +427,12 @@ abstract class Application
         $uri = sprintf('%s/%s', $object::getResourceURI(), $object->getGUID());
         $url = new URL($this, $uri);
         $request = new Request($this, $url, Request::METHOD_DELETE);
-        $request->send();
+        $response = $request->send();
 
-        return $request->getResponse();
+        if (false !== $element = current($response->getElements())) {
+            $object->fromStringArray($element, true);
+        }
+
+        return $object;
     }
 }

@@ -4,7 +4,7 @@ namespace XeroPHP\Models\Accounting;
 use XeroPHP\Remote;
 use XeroPHP\Models\Accounting\TrackingCategory\TrackingOption;
 
-class TrackingCategory extends Remote\Object
+class TrackingCategory extends Remote\Model
 {
 
     /**
@@ -106,6 +106,8 @@ class TrackingCategory extends Remote\Object
         return [
             'TrackingCategoryID' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
             'Name' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
+            'TrackingCategoryName' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
+            'TrackingOptionName' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
             'Status' => [false, self::PROPERTY_TYPE_STRING, null, false, false],
             'Option' => [false, self::PROPERTY_TYPE_STRING, null, false, false]
         ];
@@ -151,6 +153,44 @@ class TrackingCategory extends Remote\Object
     {
         $this->propertyUpdated('Name', $value);
         $this->_data['Name'] = $value;
+        return $this;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getTrackingCategoryName()
+    {
+        return $this->_data['TrackingCategoryName'];
+    }
+
+    /**
+     * @param string $value
+     * @return TrackingCategory
+     */
+    public function setTrackingCategoryName($value)
+    {
+        $this->propertyUpdated('TrackingCategoryName', $value);
+        $this->_data['TrackingCategoryName'] = $value;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTrackingOptionName()
+    {
+        return $this->_data['TrackingOptionName'];
+    }
+
+    /**
+     * @param string $value
+     * @return TrackingCategory
+     */
+    public function setTrackingOptionName($value)
+    {
+        $this->propertyUpdated('TrackingOptionName', $value);
+        $this->_data['TrackingOptionName'] = $value;
         return $this;
     }
 

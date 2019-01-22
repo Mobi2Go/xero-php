@@ -3,13 +3,15 @@ namespace XeroPHP\Models\Accounting;
 
 use XeroPHP\Remote;
 use XeroPHP\Traits\AttachmentTrait;
+use XeroPHP\Traits\HistoryTrait;
 use XeroPHP\Models\Accounting\BankTransfer\FromBankAccount;
 use XeroPHP\Models\Accounting\BankTransfer\ToBankAccount;
 
-class BankTransfer extends Remote\Object
+class BankTransfer extends Remote\Model
 {
 
     use AttachmentTrait;
+    use HistoryTrait;
 
     /**
      * See FromBankAccount
@@ -24,7 +26,7 @@ class BankTransfer extends Remote\Object
      */
 
     /**
-     * 
+     *
      *
      * @property string Amount
      */

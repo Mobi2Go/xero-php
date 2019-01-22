@@ -3,12 +3,14 @@ namespace XeroPHP\Models\Accounting;
 
 use XeroPHP\Remote;
 use XeroPHP\Traits\AttachmentTrait;
+use XeroPHP\Traits\HistoryTrait;
 use XeroPHP\Models\Accounting\Receipt\LineItem;
 
-class Receipt extends Remote\Object
+class Receipt extends Remote\Model
 {
 
     use AttachmentTrait;
+    use HistoryTrait;
 
     /**
      * Date of receipt – YYYY-MM-DD
@@ -402,6 +404,12 @@ class Receipt extends Remote\Object
         return $this->_data['Status'];
     }
 
+     public function setStatus($value)
+    {
+        $this->propertyUpdated('Status', $value);
+        $this->_data['Status'] = $value;
+        return $this;
+    }
 
     /**
      * @return string

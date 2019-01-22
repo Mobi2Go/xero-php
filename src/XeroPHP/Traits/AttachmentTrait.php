@@ -12,7 +12,7 @@ trait AttachmentTrait
     public function addAttachment(Attachment $attachment, $include_online = false)
     {
         /**
-         * @var Object $this
+         * @var \XeroPHP\Remote\Model $this
          */
         $uri = sprintf('%s/%s/Attachments/%s', $this::getResourceURI(), $this->getGUID(), rawurlencode($attachment->getFileName()));
 
@@ -30,6 +30,8 @@ trait AttachmentTrait
 
         if (false !== $element = current($response->getElements())) {
             $attachment->fromStringArray($element);
+            //If this was successful, it obviously has them
+            $this->fromStringArray(['HasAttachments' => true]);
         }
 
         return $this;
@@ -38,7 +40,7 @@ trait AttachmentTrait
     public function getAttachments()
     {
         /**
-         * @var Object $this
+         * @var \XeroPHP\Remote\Model $this
          */
         if ($this->hasGUID() === false) {
             throw new Exception(
